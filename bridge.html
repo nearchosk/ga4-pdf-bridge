@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Opening PDF…</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <script>
+    // Ensure dataLayer exists early so GTM can process queued events
+    window.dataLayer = window.dataLayer || [];
+  </script>
+
+  <!-- Google Tag Manager -->
+  <script>
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-NRLCSG7Q'); // TODO: replace with your GTM container ID
+  </script>
+  <!-- End Google Tag Manager -->
+
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    .center{display:grid;place-items:center;height:100dvh;padding:24px;text-align:center}
+    button{padding:12px 18px;border-radius:10px;border:0;cursor:pointer}
+  </style>
+
+  <script>
+  (function(){
+    function get(name){ return new URLSearchParams(location.search).get(name); }
+    function dec(u){ try { return decodeURIComponent(u); } catch(e){ return u; } }
+
+    var pdf = dec(get('pdf') || '');
+    var id = get('id') || (pdf ? pdf.split('/').pop() : '');
+    var issue = get('issue') || new Date().toISOString().slice(0,7); // YYYY-MM
+    var source = get('src') || 'internal_email';
+    var token = get('t') || ''; // optional per-recipient random token
+    var click = get('click') === '1'; // optional: require a human click to avoid scanners
+
+    // Allowlist: your production host + a public test PDF host (w3.org)
+    var allowed = /^https:\/\/(www\.)?(allianz\.nl|w3\.org)\/.+\.pdf(\?|#|$)/i.test(pdf);
+
+    function show(html){
+      document.body.innerHTML = html;
+    }
+    function go(){ if(pdf){ window.location.replace(pdf); } }
+
+    function trackAndGo(){
+      // Push a custom event into dataLayer. GTM will pick it up and send GA4 event.
+      window.dataLayer.push({
+        event: 'pdf_open',
+        file_url: pdf,
+        pdf_id: id,
+        issue: issue,
+        source: source,
+        token: token
+      });
+      // Give GTM a short window to fire the GA4 tag before redirect
+      setTimeout(go, 700);
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      if(!pdf || !allowed){
+        show('<main class="center"><div><h1>Invalid link</h1><p>The PDF URL is missing or not allowed.</p></div></main>');
+        return;
+      }
+      if (click){
+        show('<main class="center"><div><h1>Open PDF</h1><p><small>'+id+'</small></p><button id="open">Open PDF</button></div></main>');
+        document.getElementById('open').addEventListener('click', trackAndGo);
+      } else {
+        show('<main class="center"><div>Opening your PDF…</div></main>');
+        trackAndGo();
+      }
+    });
+  })();
+  </script>
+</head>
+<body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+</body>
+</html>
